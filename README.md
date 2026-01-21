@@ -39,11 +39,11 @@ tact-cpp2/
 
 ## Usage
 
-To use this library in your project, you need the following files from the `lib/` directory:
+To use this library in your project, you need the following files:
 
-- `bhaptics_library.dll` (Runtime DLL)
-- `bhaptics_library.lib` (Link library)
-- `library.h` (Header file from `tact-cpp2/tact-cpp2/`)
+- `bhaptics_library.dll` (Runtime DLL, from the `lib/` directory)
+- `bhaptics_library.lib` (Link library, from the `lib/` directory)
+- `library.h` (Header file located at `tact-cpp2/tact-cpp2/library.h`)
 
 ### Example
 
