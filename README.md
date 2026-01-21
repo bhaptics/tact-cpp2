@@ -51,6 +51,10 @@ To use this library in your project, you need the following files:
 #include "library.h"
 
 int main() {
+    // TODO: Replace these placeholder values with your own from the bHaptics Developer Portal.
+    const char* sdkKey = "YOUR_SDK_KEY_HERE";   // Obtain from your workspace at https://developer.bhaptics.com
+    const char* appId = "YOUR_APP_ID_HERE";     // App ID from the same workspace
+    const char* mappingJson = "{}";             // JSON string with your haptic mappings
     // Initialize connection
     bool connected = registryAndInit(sdkKey, appId, mappingJson);
 
