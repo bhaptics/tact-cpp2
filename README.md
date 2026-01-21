@@ -1,20 +1,81 @@
-# Tact-CPP2 Project  
+# Tact-CPP2 Project
 
-## Getting Started  
+A C++ library for integrating bHaptics haptic feedback devices.
 
-1. First, create a workspace using the following link: [bHaptics Developer Portal](https://developer.bhaptics.com/).  
-   - For documentation, refer to the [bHaptics Documentation Portal](https://docs.bhaptics.com/portal/).  
+> **Platform**: Windows only (Windows 10/11)
 
-2. This project is a library designed for use in cpp.  
+## Requirements
 
-3. Download the **bHaptics Player** from the following link: [bHaptics Player](https://www.bhaptics.com/software/player/?type=pcplayer).  
-   - Make sure the player is running for the library to work.  
+- Windows 10 or Windows 11
+- Visual Studio 2019 or later
+- [bHaptics Player](https://www.bhaptics.com/software/player/?type=pcplayer) (must be running)
 
-## Project Structure  
-- `tact-cpp2`: Demonstrates how to use the library.  
+## Getting Started
 
-## Usage  
+1. Create a workspace at the [bHaptics Developer Portal](https://developer.bhaptics.com/).
+   - For documentation, refer to the [bHaptics Documentation Portal](https://docs.bhaptics.com/portal/).
 
-To use this library in other projects, you need the following two files:  
-- `bhaptics_library.dll` (C++ DLL)  
-- `bhaptics_library.lib` (C++ Lib)   
+2. Download and install the **bHaptics Player** from [here](https://www.bhaptics.com/software/player/?type=pcplayer).
+   - The player must be running for the library to work.
+
+## Project Structure
+
+```
+tact-cpp2/
+├── lib/
+│   ├── bhaptics_library.dll
+│   └── bhaptics_library.lib
+└── tact-cpp2/
+    ├── tact-cpp2.sln
+    └── tact-cpp2/
+        ├── library.h          # API header
+        └── main.cpp           # Usage example
+```
+
+## Build
+
+1. Open `tact-cpp2/tact-cpp2.sln` in Visual Studio.
+2. Build the solution (F7 or Build > Build Solution).
+
+## Usage
+
+To use this library in your project, you need the following files from the `lib/` directory:
+
+- `bhaptics_library.dll` (Runtime DLL)
+- `bhaptics_library.lib` (Link library)
+- `library.h` (Header file from `tact-cpp2/tact-cpp2/`)
+
+### Example
+
+```cpp
+#include "library.h"
+
+int main() {
+    // Initialize connection
+    bool connected = registryAndInit(sdkKey, appId, mappingJson);
+
+    if (!connected) {
+        return -1;
+    }
+
+    // Play haptic event
+    int requestId = play("eventName");
+
+    // Check if playing
+    bool playing = isPlayingByRequestId(requestId);
+
+    // Stop event
+    stop(requestId);
+
+    // Close connection
+    wsClose();
+
+    return 0;
+}
+```
+
+For more detailed usage, refer to `tact-cpp2/tact-cpp2/main.cpp`.
+
+## License
+
+See [LICENSE](LICENSE) file. Use of bHaptics SDK is subject to the [bHaptics SDK agreement](https://bhaptics.gitbook.io/license-sdk/).
