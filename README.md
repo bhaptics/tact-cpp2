@@ -63,6 +63,7 @@ int main() {
     }
 
     // Play haptic event
+    // "eventName" must match the name of an event defined in your bHaptics Developer Portal workspace (or in your mapping JSON).
     int requestId = play("eventName");
 
     // Check if playing
