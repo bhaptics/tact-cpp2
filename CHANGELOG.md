@@ -24,6 +24,7 @@ All notable changes to the bHaptics C/C++ SDK in this repository. Each version m
 
 - `pause` — use `pauseEvent`.
 - `reInitMessage` — use `retryInitialize`.
+- `playWaveform`.
 - The Visual Studio sample solution — Visual Studio opens the CMake project directly, and `sdk/README.md` covers manual project setup.
 
 ### Upgrading

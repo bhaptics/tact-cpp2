@@ -290,37 +290,6 @@ int32_t BHAPTICS_CALL playDotToDevice(int32_t requestId,
                         int32_t deviceIndex);
 
 /**
- * @brief Run a waveform pattern (formerly `play_glove`).
- * @param requestId      Request id to assign, used verbatim. Pass -1 to let the SDK generate one.
- * @param position       The bHaptics product position to play on.
- * @param motorValues    Per-motor intensity array (length = `motorLen`).
- * @param playTimeValues Per-motor play time (5ms units: 1=5ms, 2=10ms, 4=20ms, 6=30ms, 8=40ms).
- *                       Must have at least `motorLen` elements.
- * @param shapeValues    Per-motor shape (0: hold, 1: 50% linear decrease, 2: 50% linear increase).
- *                       Must have at least `motorLen` elements.
- * @param repeatCount    Number of repetitions.
- * @param motorLen       Length of all three arrays. **Caller must guarantee that
- *                       `motorValues`, `playTimeValues`, and `shapeValues` are each
- *                       at least this long; otherwise the read is out-of-bounds.**
- * @return The request id assigned to the playback. -1 if playback failed to start.
- *
- * # Safety
- * `motorValues`, `playTimeValues`, and `shapeValues` must each be NULL or
- * point to at least `motorLen` readable, properly aligned `int32_t` values
- * that stay valid for the duration of this call. A NULL pointer or a
- * non-positive `motorLen` is treated as an empty array; a `motorLen` larger
- * than any of the three allocations is an out-of-bounds read.
- */
-BHAPTICS_DECLSPEC
-int32_t BHAPTICS_CALL playWaveform(int32_t requestId,
-                     int32_t position,
-                     const int32_t *motorValues,
-                     const int32_t *playTimeValues,
-                     const int32_t *shapeValues,
-                     int32_t repeatCount,
-                     int32_t motorLen);
-
-/**
  * @brief Run a waveform pattern on the TactGlove DK3 variant.
  * @param requestId      Request id to assign, used verbatim. Pass -1 to let the SDK generate one.
  * @param position       The bHaptics product position to play on.

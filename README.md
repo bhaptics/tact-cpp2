@@ -94,7 +94,7 @@ Every function is declared and documented in [`bhaptics.h`](sdk/include/bhaptics
 | Player | `isPlayerInstalled`, `isPlayerRunning`, `launchPlayer` |
 | Events | `play`, `playParam`, `playWithStartTime`, `playWithoutResult`, `playLoop`, `getEventTime` |
 | Playback control | `stop`, `stopByEventId`, `stopAll`, `pauseEvent`, `resume`, `isPlaying`, `isPlayingByEventId`, `isPlayingByRequestId` |
-| Direct motor control | `playDot`, `playPath`, `playWaveform`, `playWaveformDk3` |
+| Direct motor control | `playDot`, `playPath`, `playWaveformDk3` |
 | Devices | `isbHapticsConnected`, `getDeviceInfoJson`, `ping`, `pingAll`, `swapPosition`, `setDeviceVsm` |
 | Several devices of the same type | `playWithStartTimeToDevice`, `playLoopToDevice`, `playDotToDevice`, `playPathToDevice` |
 | Workspace data | `getHapticMappingsJson`, `bHapticsGetHapticMessage`, `bHapticsGetHapticMappings` |
@@ -120,6 +120,7 @@ The [previous version](https://github.com/bhaptics/tact-cpp2/tree/e60e547) shipp
 | `reInitMessage(key, workspace, json)` | `retryInitialize(key, workspace)` |
 | `bool resume(eventId)` | `void resume(eventId)` |
 | `bHapticsGetHapticMappings/Message(…, int& status)` | `…, int32_t* status` — pass `&status` |
+| `playWaveform(…)` | removed |
 
 Rebuild your application after updating: replacing the DLL alone is not enough.
 
