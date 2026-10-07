@@ -5,7 +5,7 @@ Drive bHaptics haptic devices — TactSuit, TactGlove, TactVisor, TactSleeve and
 | Platform | Architectures | Library |
 |---|---|---|
 | Windows 10 / 11 | x64, x86 (32-bit) | `sdk/lib/x64/`, `sdk/lib/x86/` — `bhaptics_library.dll` + `bhaptics_library.lib` |
-| macOS | Apple silicon + Intel (universal) | `sdk/lib/libbhaptics_library.dylib` |
+| macOS 10.12 or later | Apple silicon + Intel (universal) | `sdk/lib/libbhaptics_library.dylib` |
 
 ## Contents
 
@@ -19,6 +19,8 @@ examples/                 runnable examples (below)
 CMakeLists.txt            builds the examples
 ```
 
+Only need the SDK? Each [release](https://github.com/bhaptics/tact-cpp2/releases) has the `sdk/` folder as `bhaptics-cpp-<version>.zip`.
+
 ## Requirements
 
 - **bHaptics Player** installed and running.
@@ -28,19 +30,23 @@ CMakeLists.txt            builds the examples
 
 ## Run the examples
 
-```bash
-# Windows (-A Win32 for a 32-bit build)
+Windows (`-A Win32` for a 32-bit build):
+
+```powershell
 cmake -S . -B build -A x64
 cmake --build build --config Release
-build\Release\hello.exe <sdk_api_key> <workspace_id> <event>
+.\build\Release\hello.exe <sdk_api_key> <workspace_id> <event>
+```
 
-# macOS
+macOS:
+
+```bash
 cmake -S . -B build
 cmake --build build
 ./build/hello <sdk_api_key> <workspace_id> <event>
 ```
 
-Instead of arguments you can set `BHAPTICS_SDK_API_KEY`, `BHAPTICS_WORKSPACE_ID` and `BHAPTICS_EVENT`.
+`<event>` is the name of an event in that workspace; it has to be deployed for the Player to know it. Instead of arguments you can set `BHAPTICS_SDK_API_KEY`, `BHAPTICS_WORKSPACE_ID` and `BHAPTICS_EVENT`.
 
 | Example | Shows |
 |---|---|
@@ -55,10 +61,10 @@ Visual Studio 2019 or later opens this folder directly (**File → Open → Fold
 With CMake:
 
 ```cmake
-find_package(bhaptics CONFIG REQUIRED PATHS path/to/sdk)
+find_package(bhaptics 2.7 CONFIG REQUIRED PATHS path/to/sdk)  # any 2.x from 2.7 on
 target_link_libraries(my_app PRIVATE bhaptics::bhaptics)
 
-# Windows: put bhaptics_library.dll next to the executable
+# Windows: put bhaptics_library.dll next to the executable (CMake 3.21+)
 add_custom_command(TARGET my_app POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_RUNTIME_DLLS:my_app> $<TARGET_FILE_DIR:my_app>
@@ -71,7 +77,7 @@ The x64 or x86 library is picked to match your build. Without CMake, see [`sdk/R
 #include <bhaptics/bhaptics.h>
 
 registryAndInit("YOUR_SDK_API_KEY", "YOUR_WORKSPACE_ID", "");
-/* ...wait until wsIsConnected() — the connection is made in the background */
+/* ...wait until getEventTime("your_event") > 0 (see Conventions below) */
 int32_t requestId = play("your_event");
 /* ... */
 wsClose();
@@ -88,20 +94,23 @@ Every function is declared and documented in [`bhaptics.h`](sdk/include/bhaptics
 | Player | `isPlayerInstalled`, `isPlayerRunning`, `launchPlayer` |
 | Events | `play`, `playParam`, `playWithStartTime`, `playWithoutResult`, `playLoop`, `getEventTime` |
 | Playback control | `stop`, `stopByEventId`, `stopAll`, `pauseEvent`, `resume`, `isPlaying`, `isPlayingByEventId`, `isPlayingByRequestId` |
-| Direct motor control | `playDot`, `playPath`, `playWaveform`, `playWaveformDk3` |
+| Direct motor control | `playDot`, `playPath`, `playWaveformDk3` |
 | Devices | `isbHapticsConnected`, `getDeviceInfoJson`, `ping`, `pingAll`, `swapPosition`, `setDeviceVsm` |
 | Several devices of the same type | `playWithStartTimeToDevice`, `playLoopToDevice`, `playDotToDevice`, `playPathToDevice` |
+| Workspace data | `getHapticMappingsJson`, `bHapticsGetHapticMessage`, `bHapticsGetHapticMappings` |
 
 Conventions:
 
 - Calls are **synchronous**. Calls from several threads are serialized.
+- `registryAndInit` returns before the Player is ready: it connects (`wsIsConnected()`), then sends your workspace's event list. `getEventTime(event)` is `0` until the event is in that list, so wait for it to turn positive before playing. The examples do this with a timeout.
+- `play*` functions return a request id, or `-1` if the request could not be sent. They do not check event names: an unknown event plays nothing.
 - `requestId` parameters: pass `-1` to let the SDK assign one (it is returned); any other value is used as-is, so you can later `stop()` it.
 - `const char*` results are owned by the library and valid until the next call to the same function on the same thread — do not free them.
 - Call `bHapticsShutdown()` before unloading the library (plugins, mods).
 
 ## Migrating from the previous version
 
-The previous version shipped `tact-cpp2/tact-cpp2/library.h` and 64-bit libraries in `lib/`. Function signatures are unchanged except:
+The [previous version](https://github.com/bhaptics/tact-cpp2/tree/e60e547) shipped `tact-cpp2/tact-cpp2/library.h` and 64-bit libraries in `lib/`. Function signatures are unchanged except:
 
 | Before | Now |
 |---|---|
@@ -111,10 +120,21 @@ The previous version shipped `tact-cpp2/tact-cpp2/library.h` and 64-bit librarie
 | `reInitMessage(key, workspace, json)` | `retryInitialize(key, workspace)` |
 | `bool resume(eventId)` | `void resume(eventId)` |
 | `bHapticsGetHapticMappings/Message(…, int& status)` | `…, int32_t* status` — pass `&status` |
+| `playWaveform(…)` | removed |
 
 Rebuild your application after updating: replacing the DLL alone is not enough.
 
 See [CHANGELOG.md](CHANGELOG.md) for everything new.
+
+## Versions
+
+One version number covers the whole SDK. It appears as:
+
+- the `BHAPTICS_VERSION_MAJOR` / `_MINOR` / `_PATCH` macros in `bhaptics.h`, for compile-time checks;
+- the CMake package version, so `find_package(bhaptics 2.7 ...)` accepts any 2.x from 2.7 on and rejects 3.x;
+- the `v<version>` git tag and [GitHub release](https://github.com/bhaptics/tact-cpp2/releases), whose notes and [CHANGELOG.md](CHANGELOG.md) list what changed.
+
+The libraries have no version resource, so keep `bhaptics.h` and the libraries from the same release together.
 
 ## License
 

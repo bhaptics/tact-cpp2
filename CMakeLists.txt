@@ -7,6 +7,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # The SDK in sdk/ — or point bhaptics_DIR at any extracted bhaptics-cpp release.
 find_package(bhaptics CONFIG REQUIRED PATHS "${CMAKE_CURRENT_SOURCE_DIR}/sdk")
 
+# bhaptics.h and the CMake package version must come from the same SDK release.
+get_target_property(bhaptics_include bhaptics::bhaptics INTERFACE_INCLUDE_DIRECTORIES)
+file(READ "${bhaptics_include}/bhaptics/bhaptics.h" bhaptics_header)
+foreach(part MAJOR MINOR PATCH)
+    string(REGEX MATCH "#define BHAPTICS_VERSION_${part} ([0-9]+)" _ "${bhaptics_header}")
+    if(NOT "${CMAKE_MATCH_1}" STREQUAL "${bhaptics_VERSION_${part}}")
+        message(FATAL_ERROR "bhaptics.h and the bhaptics CMake package (${bhaptics_VERSION}) are from different releases")
+    endif()
+endforeach()
+
 foreach(source examples/hello.c examples/play_events.cpp examples/motor_control.cpp)
     get_filename_component(name "${source}" NAME_WE)
     add_executable(${name} "${source}")
