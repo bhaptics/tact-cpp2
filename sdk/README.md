@@ -17,16 +17,16 @@ THIRD_PARTY_NOTICES.txt          licenses of the open-source components inside t
 
 - [bHaptics Player](https://www.bhaptics.com/software/player/?type=pcplayer) running on the machine (or reachable — see `registryAndInitHost`)
 - A workspace on the [bHaptics Developer Portal](https://developer.bhaptics.com/) for your SDK API key and workspace ID
-- Windows 10 or later with the [Visual C++ 2015–2022 Redistributable](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist) matching your build (x64 or **x86**)
+- Windows 10 or later with the [Visual C++ 2015–2022 Redistributable](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist) matching your build (x64 or **x86**), or macOS 10.12 or later
 - Any C99 / C++11 compiler. On Windows the calling convention is pinned to `__cdecl`, so `/Gz` and `/Gr` projects work too
 
 ## Use with CMake
 
 ```cmake
-find_package(bhaptics CONFIG REQUIRED)     # -Dbhaptics_DIR=<this folder>/cmake
+find_package(bhaptics 2.7 CONFIG REQUIRED)  # -Dbhaptics_DIR=<this folder>/cmake; any 2.x from 2.7 on
 target_link_libraries(my_app PRIVATE bhaptics::bhaptics)
 
-# Windows: put the DLL next to the executable
+# Windows: put the DLL next to the executable (CMake 3.21+)
 add_custom_command(TARGET my_app POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_RUNTIME_DLLS:my_app> $<TARGET_FILE_DIR:my_app>
@@ -37,10 +37,12 @@ On Windows the x64 or x86 library is selected from the project's architecture (`
 
 ## Use with Visual Studio (without CMake)
 
-1. **C/C++ → General → Additional Include Directories**: add `include`
-2. **Linker → General → Additional Library Directories**: add `lib\x64` (or `lib\x86` for Win32)
+With **Configuration: All Configurations** and **Platform: All Platforms**, where `<sdk>` is this folder. `$(PlatformTarget)` is `x64` or `x86`, matching the `lib` subfolders:
+
+1. **C/C++ → General → Additional Include Directories**: add `<sdk>\include`
+2. **Linker → General → Additional Library Directories**: add `<sdk>\lib\$(PlatformTarget)`
 3. **Linker → Input → Additional Dependencies**: add `bhaptics_library.lib`
-4. Copy `lib\<arch>\bhaptics_library.dll` next to your executable
+4. **Build Events → Post-Build Event → Command Line**: `xcopy /y /d "<sdk>\lib\$(PlatformTarget)\bhaptics_library.dll" "$(OutDir)"`
 
 ## Quick start
 
@@ -51,8 +53,9 @@ int main(void) {
     if (!registryAndInit("YOUR_SDK_API_KEY", "YOUR_WORKSPACE_ID", "")) {
         return 1;
     }
-    /* The Player connection is made in the background — poll wsIsConnected()
-       before the first play if you need it to land immediately. */
+    /* registryAndInit returns before the Player is ready: it connects, then sends
+       your workspace's event list. Poll, with a timeout, until
+       getEventTime("your_event") > 0 - play() does not check event names. */
 
     int32_t requestId = play("your_event");   /* an event from your workspace */
 

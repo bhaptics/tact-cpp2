@@ -1,8 +1,8 @@
 # Changelog
 
-All notable changes to the bHaptics C/C++ SDK in this repository. Versions match `BHAPTICS_VERSION_*` in `bhaptics.h`.
+All notable changes to the bHaptics C/C++ SDK in this repository. Each version matches `BHAPTICS_VERSION_*` in `bhaptics.h`, the CMake package version and a `v<version>` [release](https://github.com/bhaptics/tact-cpp2/releases).
 
-## 2.7.1
+## [2.7.1] - 2026-10-07
 
 ### Added
 
@@ -41,3 +41,5 @@ ac556983bf429f7d23b9416111d73070bcce9806fb3730a5af1cc2e9a6f49b41  sdk/lib/x86/bh
 ```
 
 Check a copy with `Get-FileHash <file>` (PowerShell) or `shasum -a 256 <file>` (macOS).
+
+[2.7.1]: https://github.com/bhaptics/tact-cpp2/releases/tag/v2.7.1
