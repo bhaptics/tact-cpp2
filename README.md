@@ -112,6 +112,8 @@ The previous version shipped `tact-cpp2/tact-cpp2/library.h` and 64-bit librarie
 | `bool resume(eventId)` | `void resume(eventId)` |
 | `bHapticsGetHapticMappings/Message(…, int& status)` | `…, int32_t* status` — pass `&status` |
 
+Rebuild your application after updating: replacing the DLL alone is not enough.
+
 See [CHANGELOG.md](CHANGELOG.md) for everything new.
 
 ## License

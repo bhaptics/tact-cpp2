@@ -13,8 +13,6 @@ using namespace example;
 
 namespace {
 
-constexpr int32_t kAutoId = -1;
-
 // TactSuit motors as playDot sees them: 32 values, front then back, each side a
 // 4 x 4 grid in row-major order (row 0 = shoulders, row 3 = waist).
 constexpr int kCols = 4;

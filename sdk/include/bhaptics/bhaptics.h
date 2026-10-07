@@ -114,26 +114,18 @@ BHAPTICS_DECLSPEC void BHAPTICS_CALL retryInitialize(const char *sdkAPIKey, cons
 /**
  * @brief Check websocket connection status.
  * @return `true` if connected to the player, `false` otherwise.
- *
- * # Safety
- * Takes no pointer arguments and has no additional preconditions; it is
- * `unsafe` only for ABI uniformity with the other `extern "C"` exports.
  */
 BHAPTICS_DECLSPEC bool BHAPTICS_CALL wsIsConnected(void);
 
 /**
  * @brief Close the websocket connection.
- *
- * # Safety
- * Takes no pointer arguments and has no additional preconditions; it is
- * `unsafe` only for ABI uniformity with the other `extern "C"` exports.
  */
 BHAPTICS_DECLSPEC void BHAPTICS_CALL wsClose(void);
 
 /**
  * @brief Shut down the internal runtime and release its background threads.
  * @details Closes the websocket connection, stops the auto-reconnect loop,
- * clears cached credentials, and then joins the internal Tokio worker thread so
+ * clears cached credentials, and then joins the internal worker thread so
  * no bHaptics code is still executing when a plugin host unloads this library
  * (`dlclose` / `FreeLibrary`). Call it once, on your teardown path, before the
  * library is unloaded - e.g. a Godot GDExtension deinitialize, a Unity
@@ -154,10 +146,6 @@ BHAPTICS_DECLSPEC void BHAPTICS_CALL wsClose(void);
  * Thread-safety: do not call other exports concurrently with this on other
  * threads. A short grace period tolerates a call that is just returning, but
  * overlapping work defeats the point of joining.
- *
- * # Safety
- * Takes no pointer arguments and has no additional preconditions; it is
- * `unsafe` only for ABI uniformity with the other `extern "C"` exports.
  */
 BHAPTICS_DECLSPEC void BHAPTICS_CALL bHapticsShutdown(void);
 
@@ -249,7 +237,7 @@ int32_t BHAPTICS_CALL playWithStartTime(const char *key,
  * @return The request id assigned to the playback. -1 if playback failed to start.
  *
  * # Safety
- * Same as [`playWithStartTime`].
+ * Same as `playWithStartTime`.
  */
 BHAPTICS_DECLSPEC
 int32_t BHAPTICS_CALL playWithStartTimeToDevice(const char *key,
@@ -291,7 +279,7 @@ int32_t BHAPTICS_CALL playDot(int32_t requestId,
  * @return The request id assigned to the playback. -1 if playback failed to start.
  *
  * # Safety
- * Same as [`playDot`].
+ * Same as `playDot`.
  */
 BHAPTICS_DECLSPEC
 int32_t BHAPTICS_CALL playDotToDevice(int32_t requestId,
@@ -401,7 +389,7 @@ int32_t BHAPTICS_CALL playPath(int32_t requestId,
  * @return The request id assigned to the playback. -1 if playback failed to start.
  *
  * # Safety
- * Same as [`playPath`].
+ * Same as `playPath`.
  */
 BHAPTICS_DECLSPEC
 int32_t BHAPTICS_CALL playPathToDevice(int32_t requestId,
@@ -449,7 +437,7 @@ int32_t BHAPTICS_CALL playLoop(const char *eventId,
  * @return The request id assigned to the loop. -1 if playback failed to start.
  *
  * # Safety
- * Same as [`playLoop`].
+ * Same as `playLoop`.
  */
 BHAPTICS_DECLSPEC
 int32_t BHAPTICS_CALL playLoopToDevice(const char *eventId,
@@ -502,10 +490,6 @@ BHAPTICS_DECLSPEC void BHAPTICS_CALL resume(const char *eventId);
  * @return `true` if the stop request was queued for transmission, `false` on
  *         encode/transport failure (e.g. the Player is not connected). This
  *         reports delivery of the request, not that the device has stopped.
- *
- * # Safety
- * Takes no pointer arguments and has no additional preconditions; it is
- * `unsafe` only for ABI uniformity with the other `extern "C"` exports.
  */
 BHAPTICS_DECLSPEC bool BHAPTICS_CALL stop(int32_t requestKey);
 
@@ -528,10 +512,6 @@ BHAPTICS_DECLSPEC bool BHAPTICS_CALL stopByEventId(const char *eventId);
  * @return `true` if the stop-all request was queued for transmission, `false`
  *         on encode/transport failure (e.g. the Player is not connected). This
  *         reports delivery of the request, not that the device has stopped.
- *
- * # Safety
- * Takes no pointer arguments and has no additional preconditions; it is
- * `unsafe` only for ABI uniformity with the other `extern "C"` exports.
  */
 BHAPTICS_DECLSPEC bool BHAPTICS_CALL stopAll(void);
 
@@ -539,20 +519,12 @@ BHAPTICS_DECLSPEC bool BHAPTICS_CALL stopAll(void);
  * @brief Check the connection status of a specific device.
  * @param position Device product position.
  * @return `true` if connected, `false` otherwise.
- *
- * # Safety
- * Takes no pointer arguments and has no additional preconditions; it is
- * `unsafe` only for ABI uniformity with the other `extern "C"` exports.
  */
 BHAPTICS_DECLSPEC bool BHAPTICS_CALL isbHapticsConnected(int32_t position);
 
 /**
  * @brief Check whether any event is currently playing.
  * @return `true` if at least one event is running, `false` otherwise.
- *
- * # Safety
- * Takes no pointer arguments and has no additional preconditions; it is
- * `unsafe` only for ABI uniformity with the other `extern "C"` exports.
  */
 BHAPTICS_DECLSPEC bool BHAPTICS_CALL isPlaying(void);
 
@@ -560,10 +532,6 @@ BHAPTICS_DECLSPEC bool BHAPTICS_CALL isPlaying(void);
  * @brief Check whether an event is playing by request id.
  * @param requestId The request id returned at play time.
  * @return `true` if the event is running, `false` otherwise.
- *
- * # Safety
- * Takes no pointer arguments and has no additional preconditions; it is
- * `unsafe` only for ABI uniformity with the other `extern "C"` exports.
  */
 BHAPTICS_DECLSPEC bool BHAPTICS_CALL isPlayingByRequestId(int32_t requestId);
 
@@ -589,7 +557,7 @@ BHAPTICS_DECLSPEC bool BHAPTICS_CALL isPlayingByEventId(const char *eventId);
  *                    4=WorkspaceDeployError, 999=UnknownError). **Always written
  *                    before this function returns**: set to 0 on entry, overwritten
  *                    with the real value if the HTTP call completes, and left at 0
- *                    if the call times out or panics. May be `NULL`.
+ *                    if the call times out or fails. May be `NULL`.
  * @return JSON string owned by the library. The pointer is valid until the next
  *         call to this function from the same thread. Do NOT `free()` it.
  *         Returns `NULL` if an unrecoverable error (e.g. allocator failure) occurs.
@@ -620,7 +588,7 @@ const char *BHAPTICS_CALL bHapticsGetHapticMessage(const char *appKey,
  *                    4=WorkspaceDeployError, 999=UnknownError). **Always written
  *                    before this function returns**: set to 0 on entry, overwritten
  *                    with the real value if the HTTP call completes, and left at 0
- *                    if the call times out or panics. May be `NULL`.
+ *                    if the call times out or fails. May be `NULL`.
  * @return JSON string owned by the library. The pointer is valid until the next
  *         call to this function from the same thread. Do NOT `free()` it.
  *         Returns `NULL` if an unrecoverable error (e.g. allocator failure) occurs.
@@ -644,20 +612,12 @@ const char *BHAPTICS_CALL bHapticsGetHapticMappings(const char *appKey,
 /**
  * @brief Check whether the bHaptics Player process is running.
  * @return `true` if the player is running, `false` otherwise.
- *
- * # Safety
- * Takes no pointer arguments and has no additional preconditions; it is
- * `unsafe` only for ABI uniformity with the other `extern "C"` exports.
  */
 BHAPTICS_DECLSPEC bool BHAPTICS_CALL isPlayerRunning(void);
 
 /**
  * @brief Check whether the bHaptics Player is installed on this machine.
  * @return `true` if the player is installed, `false` otherwise.
- *
- * # Safety
- * Takes no pointer arguments and has no additional preconditions; it is
- * `unsafe` only for ABI uniformity with the other `extern "C"` exports.
  */
 BHAPTICS_DECLSPEC bool BHAPTICS_CALL isPlayerInstalled(void);
 
@@ -665,10 +625,6 @@ BHAPTICS_DECLSPEC bool BHAPTICS_CALL isPlayerInstalled(void);
  * @brief Launch the bHaptics Player.
  * @param tryLaunch Whether to attempt launching if not already running.
  * @return `true` if the player is launched (or already running), `false` otherwise.
- *
- * # Safety
- * Takes no pointer arguments and has no additional preconditions; it is
- * `unsafe` only for ABI uniformity with the other `extern "C"` exports.
  */
 BHAPTICS_DECLSPEC bool BHAPTICS_CALL launchPlayer(bool tryLaunch);
 
@@ -678,10 +634,6 @@ BHAPTICS_DECLSPEC bool BHAPTICS_CALL launchPlayer(bool tryLaunch);
  *         by the library and is valid until the next call to this function from
  *         the same thread. Do NOT `free()` it.
  *         Returns `NULL` if an unrecoverable error (e.g. allocator failure) occurs.
- *
- * # Safety
- * Takes no pointer arguments; it is `unsafe` only for ABI uniformity with the
- * other `extern "C"` exports.
  *
  * The returned pointer is owned by the library and is invalidated by the next
  * call to this function on the same thread - do not `free()` it and do not use
@@ -695,10 +647,6 @@ BHAPTICS_DECLSPEC const char *BHAPTICS_CALL getDeviceInfoJson(void);
  *         the library and is valid until the next call to this function from
  *         the same thread. Do NOT `free()` it.
  *         Returns `NULL` if an unrecoverable error (e.g. allocator failure) occurs.
- *
- * # Safety
- * Takes no pointer arguments; it is `unsafe` only for ABI uniformity with the
- * other `extern "C"` exports.
  *
  * The returned pointer is owned by the library and is invalidated by the next
  * call to this function on the same thread - do not `free()` it and do not use
@@ -722,10 +670,6 @@ BHAPTICS_DECLSPEC bool BHAPTICS_CALL ping(const char *address);
 /**
  * @brief Ping all connected devices.
  * @return `true` if the message was sent, `false` if the player is not connected.
- *
- * # Safety
- * Takes no pointer arguments and has no additional preconditions; it is
- * `unsafe` only for ABI uniformity with the other `extern "C"` exports.
  */
 BHAPTICS_DECLSPEC bool BHAPTICS_CALL pingAll(void);
 

@@ -9,9 +9,6 @@ using namespace example;
 
 namespace {
 
-// Pass -1 as the request id to let the SDK assign one.
-constexpr int32_t kAutoId = -1;
-
 void step(const char* what) { std::printf("\n> %s\n", what); }
 
 }  // namespace

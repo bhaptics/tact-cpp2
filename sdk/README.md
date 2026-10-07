@@ -8,7 +8,6 @@ Native library and header for driving bHaptics devices (TactSuit, TactGlove, Tac
 include/bhaptics/bhaptics.h      C API (also usable from C++)
 lib/                             native library for this platform
   x64/ x86/                        Windows: bhaptics_library.dll + bhaptics_library.lib (import library)
-  libbhaptics_library.so           Linux
   libbhaptics_library.dylib        macOS (universal: x86_64 + arm64)
 cmake/                           find_package(bhaptics) support
 THIRD_PARTY_NOTICES.txt          licenses of the open-source components inside the library

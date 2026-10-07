@@ -34,25 +34,29 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    /* The Player connection is made in the background: wait up to 10 s. */
-    for (int i = 0; i < 100 && !wsIsConnected(); i++) {
+    /* The Player connects, then sends the workspace's event list, in the
+       background: wait up to 10 s. play() does not check event names. */
+    for (int i = 0; i < 100 && getEventTime(event) <= 0; i++) {
         sleep_ms(100);
     }
+
+    int status = 1;
     if (!wsIsConnected()) {
         fprintf(stderr, "Could not reach the bHaptics Player. Is it running?\n");
-        bHapticsShutdown();
-        return 1;
-    }
+    } else if (getEventTime(event) <= 0) {
+        fprintf(stderr, "No event \"%s\" in this workspace. Is it deployed?\n", event);
+    } else {
+        int32_t request_id = play(event);
+        printf("Playing \"%s\" (request %d)\n", event, request_id);
 
-    int32_t request_id = play(event);
-    printf("Playing \"%s\" (request %d)\n", event, request_id);
-
-    sleep_ms(100); /* playback starts asynchronously */
-    while (isPlayingByRequestId(request_id)) {
-        sleep_ms(20);
+        sleep_ms(100); /* playback starts asynchronously; wait up to 10 s for it to end */
+        for (int i = 0; i < 500 && isPlayingByRequestId(request_id); i++) {
+            sleep_ms(20);
+        }
+        status = 0;
     }
 
     wsClose();
     bHapticsShutdown();
-    return 0;
+    return status;
 }

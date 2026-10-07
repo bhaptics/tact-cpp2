@@ -22,6 +22,9 @@ enum Position : int32_t {
     GloveL, GloveR,
 };
 
+// Pass as a requestId to let the SDK assign one.
+constexpr int32_t kAutoId = -1;
+
 inline void sleep_for(std::chrono::milliseconds d) { std::this_thread::sleep_for(d); }
 
 // Credentials come from the command line or the environment, never from source code.
@@ -47,6 +50,7 @@ inline bool parse_args(int argc, char** argv, Args& out, bool needs_event) {
 }
 
 // Registers with the bHaptics Player on construction and disconnects on scope exit.
+// Ready once connected and, if args.event is set, once the Player knows that event.
 class Session {
 public:
     explicit Session(const Args& args, std::chrono::seconds timeout = 10s) {
@@ -63,10 +67,20 @@ public:
         while (!wsIsConnected() && std::chrono::steady_clock::now() < deadline) {
             sleep_for(100ms);
         }
-        connected_ = wsIsConnected();
-        if (!connected_) {
+        if (!wsIsConnected()) {
             std::fputs("Could not reach the bHaptics Player. Is it installed and running?\n", stderr);
+            return;
         }
+        // The Player then sends the workspace's event list. play() does not check event
+        // names, so a typo would otherwise play nothing, silently.
+        while (args.event && getEventTime(args.event) <= 0 && std::chrono::steady_clock::now() < deadline) {
+            sleep_for(100ms);
+        }
+        if (args.event && getEventTime(args.event) <= 0) {
+            std::fprintf(stderr, "No event \"%s\" in this workspace. Is it deployed?\n", args.event);
+            return;
+        }
+        ready_ = true;
     }
 
     ~Session() {
@@ -77,10 +91,10 @@ public:
     Session(const Session&) = delete;
     Session& operator=(const Session&) = delete;
 
-    explicit operator bool() const { return connected_; }
+    explicit operator bool() const { return ready_; }
 
 private:
-    bool connected_ = false;
+    bool ready_ = false;
 };
 
 // Blocks until the playback with this request id has finished, or the timeout passes.
