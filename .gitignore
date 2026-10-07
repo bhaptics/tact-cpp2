@@ -1,49 +1,9 @@
-# Prerequisites
-*.d
+# Build output
+build*/
+out/
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
+# IDE
 .vs/
-# User-specific files
-*.suo
-*.user
-*.sln.docstates
-
-# Build results
-
-[Dd]ebug/
-[Rr]elease/
-x64/
-build/
-[Bb]in/
-[Oo]bj/
-lib/
-Final/
+.vscode/
+.idea/
+CMakeUserPresets.json
