@@ -6,8 +6,10 @@
  * Strings: `const char*` return values are owned by the library and stay valid
  * until the next call to the same function on the same thread. Do not free them.
  *
- * Threading: every call blocks until it completes. Calls from several threads
- * are serialized on one internal worker thread; they never run in parallel.
+ * Threading: every call blocks until it completes, except `registryAndInit` /
+ * `registryAndInitHost`, which start the connection in the background and
+ * return at once. Calls from several threads are serialized on one internal
+ * worker thread; they never run in parallel.
  */
 
 #ifndef BHAPTICS_H
@@ -17,8 +19,8 @@
 #include <stdbool.h>
 
 #define BHAPTICS_VERSION_MAJOR 2
-#define BHAPTICS_VERSION_MINOR 7
-#define BHAPTICS_VERSION_PATCH 1
+#define BHAPTICS_VERSION_MINOR 8
+#define BHAPTICS_VERSION_PATCH 2
 
 /* Symbol import / visibility. Define it yourself (e.g. empty) to override.
    Not *_API: Unreal generates <MODULE>_API macros, so a module named
@@ -47,18 +49,31 @@ extern "C" {
 #endif // __cplusplus
 
 /**
+ * @brief Get the version of the loaded library.
+ * @details Compare it with the header's `BHAPTICS_VERSION_MAJOR` / `_MINOR` /
+ *          `_PATCH` to detect a library from a different release than the header
+ *          you compiled against. Can be called at any time, including before
+ *          `registryAndInit`; it starts no background work.
+ * @return The version as "MAJOR.MINOR.PATCH" (e.g. "2.7.1"). The string is static:
+ *         it never changes, stays valid while the library is loaded, and must not
+ *         be freed.
+ */
+BHAPTICS_DECLSPEC const char *BHAPTICS_CALL bHapticsGetVersion(void);
+
+/**
  * @brief Register the app with the player.
  * @details Registers the app with the player, allowing connection to a workspace
  *          created on the developer site.
  * @param sdkAPIKey       The API key of the workspace.
  * @param workspaceId     The workspace ID of the app.
  * @param initJsonMessage Initial haptic message as a JSON-formatted string. Pass "" if unused.
- * @return `true` if the init pipeline started successfully. **This does NOT guarantee that the
- *         websocket is connected right now** - if the player is not running, a background
- *         auto-reconnect loop is armed and authentication is performed automatically once
- *         the player comes up. Use `wsIsConnected()` to check live connection state.
- *         `false` only when both the initial connect failed AND auto-reconnect is disabled,
- *         or when the synchronous auth message failed to send on a successful connect.
+ * @return `true` once the init pipeline has been started **in the background**; this
+ *         call does not wait for the connection and returns immediately.
+ *         Connection and authentication complete asynchronously - if the player is not
+ *         running, an auto-reconnect loop is armed and authentication is performed
+ *         automatically once the player comes up. Use `wsIsConnected()` to check live
+ *         connection state before the first play call. `false` only if the pipeline could
+ *         not be started at all (internal failure).
  *
  * # Safety
  * `sdkAPIKey`, `workspaceId`, and `initJsonMessage` must each be NULL or point
@@ -78,9 +93,9 @@ bool BHAPTICS_CALL registryAndInit(const char *sdkAPIKey,
  * @param workspaceId     The workspace ID of the app.
  * @param initJsonMessage Initial haptic message as a JSON-formatted string. Pass "" if unused.
  * @param url             Host (IP / hostname) of the external player.
- * @return Same semantics as `registryAndInit`: `true` means the init pipeline started
- *         successfully (connection may still be in progress via auto-reconnect), `false`
- *         means a fatal failure. Use `wsIsConnected()` to check live state.
+ * @return Same semantics as `registryAndInit`: `true` means the init pipeline was started
+ *         in the background (connection may still be in progress via auto-reconnect),
+ *         `false` means it could not be started. Use `wsIsConnected()` to check live state.
  *
  * # Safety
  * `sdkAPIKey`, `workspaceId`, `initJsonMessage`, and `url` must each be NULL
@@ -113,6 +128,8 @@ BHAPTICS_DECLSPEC void BHAPTICS_CALL retryInitialize(const char *sdkAPIKey, cons
 
 /**
  * @brief Check websocket connection status.
+ * @details A single atomic read: no lock, no allocation, no background work.
+ *          Cheap enough to call before every play call.
  * @return `true` if connected to the player, `false` otherwise.
  */
 BHAPTICS_DECLSPEC bool BHAPTICS_CALL wsIsConnected(void);
@@ -288,6 +305,37 @@ int32_t BHAPTICS_CALL playDotToDevice(int32_t requestId,
                         const int32_t *motorValues,
                         int32_t motorValueLen,
                         int32_t deviceIndex);
+
+/**
+ * @brief Run a waveform pattern (formerly `play_glove`).
+ * @param requestId      Request id to assign, used verbatim. Pass -1 to let the SDK generate one.
+ * @param position       The bHaptics product position to play on.
+ * @param motorValues    Per-motor intensity array (length = `motorLen`).
+ * @param playTimeValues Per-motor play time (5ms units: 1=5ms, 2=10ms, 4=20ms, 6=30ms, 8=40ms).
+ *                       Must have at least `motorLen` elements.
+ * @param shapeValues    Per-motor shape (0: hold, 1: 50% linear decrease, 2: 50% linear increase).
+ *                       Must have at least `motorLen` elements.
+ * @param repeatCount    Number of repetitions.
+ * @param motorLen       Length of all three arrays. **Caller must guarantee that
+ *                       `motorValues`, `playTimeValues`, and `shapeValues` are each
+ *                       at least this long; otherwise the read is out-of-bounds.**
+ * @return The request id assigned to the playback. -1 if playback failed to start.
+ *
+ * # Safety
+ * `motorValues`, `playTimeValues`, and `shapeValues` must each be NULL or
+ * point to at least `motorLen` readable, properly aligned `int32_t` values
+ * that stay valid for the duration of this call. A NULL pointer or a
+ * non-positive `motorLen` is treated as an empty array; a `motorLen` larger
+ * than any of the three allocations is an out-of-bounds read.
+ */
+BHAPTICS_DECLSPEC
+int32_t BHAPTICS_CALL playWaveform(int32_t requestId,
+                     int32_t position,
+                     const int32_t *motorValues,
+                     const int32_t *playTimeValues,
+                     const int32_t *shapeValues,
+                     int32_t repeatCount,
+                     int32_t motorLen);
 
 /**
  * @brief Run a waveform pattern on the TactGlove DK3 variant.
