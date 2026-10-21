@@ -68,7 +68,9 @@ int main(void) {
 }
 ```
 
-Every call is synchronous. `const char*` results are owned by the library — do not free them.
+Every call is synchronous, except `registryAndInit` / `registryAndInitHost`, which start the connection in the background and return at once. `const char*` results are owned by the library — do not free them.
+
+To check that the loaded library comes from the same release as your header, compare `bHapticsGetVersion()` (`"MAJOR.MINOR.PATCH"`) with `BHAPTICS_VERSION_MAJOR` / `_MINOR` / `_PATCH`. On Windows the version is also shown in the DLL's Properties → Details.
 
 ## API key and workspace ID
 

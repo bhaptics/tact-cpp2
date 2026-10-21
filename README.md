@@ -91,17 +91,18 @@ Every function is declared and documented in [`bhaptics.h`](sdk/include/bhaptics
 | Area | Functions |
 |---|---|
 | Connection | `registryAndInit`, `registryAndInitHost`, `wsIsConnected`, `retryInitialize`, `wsClose`, `bHapticsShutdown` |
+| Version | `bHapticsGetVersion` |
 | Player | `isPlayerInstalled`, `isPlayerRunning`, `launchPlayer` |
 | Events | `play`, `playParam`, `playWithStartTime`, `playWithoutResult`, `playLoop`, `getEventTime` |
 | Playback control | `stop`, `stopByEventId`, `stopAll`, `pauseEvent`, `resume`, `isPlaying`, `isPlayingByEventId`, `isPlayingByRequestId` |
-| Direct motor control | `playDot`, `playPath`, `playWaveformDk3` |
+| Direct motor control | `playDot`, `playPath`, `playWaveform`, `playWaveformDk3` |
 | Devices | `isbHapticsConnected`, `getDeviceInfoJson`, `ping`, `pingAll`, `swapPosition`, `setDeviceVsm` |
 | Several devices of the same type | `playWithStartTimeToDevice`, `playLoopToDevice`, `playDotToDevice`, `playPathToDevice` |
 | Workspace data | `getHapticMappingsJson`, `bHapticsGetHapticMessage`, `bHapticsGetHapticMappings` |
 
 Conventions:
 
-- Calls are **synchronous**. Calls from several threads are serialized.
+- Calls are **synchronous**, except `registryAndInit` / `registryAndInitHost`, which start the connection in the background and return at once. Calls from several threads are serialized.
 - `registryAndInit` returns before the Player is ready: it connects (`wsIsConnected()`), then sends your workspace's event list. `getEventTime(event)` is `0` until the event is in that list, so wait for it to turn positive before playing. The examples do this with a timeout.
 - `play*` functions return a request id, or `-1` if the request could not be sent. They do not check event names: an unknown event plays nothing.
 - `requestId` parameters: pass `-1` to let the SDK assign one (it is returned); any other value is used as-is, so you can later `stop()` it.
@@ -120,7 +121,6 @@ The [previous version](https://github.com/bhaptics/tact-cpp2/tree/e60e547) shipp
 | `reInitMessage(key, workspace, json)` | `retryInitialize(key, workspace)` |
 | `bool resume(eventId)` | `void resume(eventId)` |
 | `bHapticsGetHapticMappings/Message(…, int& status)` | `…, int32_t* status` — pass `&status` |
-| `playWaveform(…)` | removed |
 
 Rebuild your application after updating: replacing the DLL alone is not enough.
 
@@ -134,7 +134,7 @@ One version number covers the whole SDK. It appears as:
 - the CMake package version, so `find_package(bhaptics 2.7 ...)` accepts any 2.x from 2.7 on and rejects 3.x;
 - the `v<version>` git tag and [GitHub release](https://github.com/bhaptics/tact-cpp2/releases), whose notes and [CHANGELOG.md](CHANGELOG.md) list what changed.
 
-The libraries have no version resource, so keep `bhaptics.h` and the libraries from the same release together.
+Keep `bhaptics.h` and the libraries from the same release together. To check the library you actually loaded, compare `bHapticsGetVersion()` (`"MAJOR.MINOR.PATCH"`) with the macros; on Windows the version is also shown in the DLL's Properties → Details.
 
 ## License
 
